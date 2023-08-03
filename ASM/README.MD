@@ -1,3 +1,14 @@
+# NVASM NVARC_16_4
+Ассемблер NVARC_16_4
+
+Очень простой.
+
+Секции vars, text, data
+
+Поддержка комментариев
+
+## Пример кода
+```
 VARS:
     test_var1 1
     test_var2 123
@@ -24,3 +35,4 @@ TEXT:
     NOC
     NOC
     HLT
+```
