@@ -1,0 +1,95 @@
+DATA:
+&string "Hello, Egor!"
+&i 0
+&offset 0
+&char 0
+TEXT:
+&p
+STC &offset
+STA &string
+SWAC
+MPTR
+SWAC
+LDWA
+STC &char
+STA 0
+SWAC
+MPTR
+SWAC
+LDWA
+STC &offset
+STA &i
+MPTR
+WRWB
+STA &offset
+MPTR
+WRWA
+SWAC
+MPTR
+SWAC
+ADD
+LDWA
+STC &offset
+STB 2
+STA &offset
+MPTR
+WRWA
+SWAC
+MPTR
+SWAC
+ADD
+LDWA
+STB 0
+STA &offset
+MPTR
+WRWC
+SWAB
+BANK
+SWAB
+SWAC
+MPTR
+SWAC
+WRB
+STA 0
+BANK
+STA &char
+MPTR
+LDWB
+STB 1
+STA &i
+MPTR
+WRWC
+STA &char
+MPTR
+WRWA
+SWAB
+BANK
+SWAB
+SWAC
+MPTR
+SWAC
+LDA
+STA 0
+BANK
+STC &i
+STB 1
+STA &i
+MPTR
+WRWA
+SWAC
+MPTR
+SWAC
+ADD
+LDWA
+STC &p
+STA &string
+MPTR
+WRWB
+STA &i
+MPTR
+WRWA
+SWAC
+MPTR
+SWAC
+JMPL
+HLT

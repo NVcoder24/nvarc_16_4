@@ -1,7 +1,7 @@
 # GLOBAL
 CPU_NAME = "NVARC_16_4"
 SIM_VER = "1.0.0"
-BANKS = 10
+BANKS = 3
 BANK_LEN = 2 ** 16
 
 # LIBS
@@ -9,6 +9,14 @@ import dearpygui.dearpygui as dpg
 import math
 import time
 from mybin import *
+import charmap
+
+# UTILS
+def get_charmap(val):
+    if val in charmap.charmap_rev.keys():
+        return charmap.charmap_rev[val]
+    else:
+        return " "
 
 # DPG SETUP
 dpg.create_context()
@@ -68,6 +76,10 @@ reg_b = 0
 reg_c = 0
 cpu_carry = 0
 cpu_exp = 0
+
+ascii_monitor_bank = 1
+ascii_monitor_x = 20
+ascii_monitor_y = 20
 
 # RAM FILLER
 for i in range(BANKS):
@@ -136,21 +148,24 @@ def clk():
             last_instr = "LDWA"
             a, b = bin_16_8_split(reg_a)
             write_ram(ram_bank, ram_ptr, a)
-            write_ram(ram_bank, bin_16_sum(ram_ptr + 1), b)
+            c, _ = bin_16_sum(ram_ptr, 1)
+            write_ram(ram_bank, c, b)
             cpu_next_instr_ptr()
         elif curr_instr_val == 7:
             #ldwb
             last_instr = "LDWB"
             a, b = bin_16_8_split(reg_b)
             write_ram(ram_bank, ram_ptr, a)
-            write_ram(ram_bank, bin_16_sum(ram_ptr + 1), b)
+            c, _ = bin_16_sum(ram_ptr, 1)
+            write_ram(ram_bank, c, b)
             cpu_next_instr_ptr()
         elif curr_instr_val == 8:
             #ldwc
             last_instr = "LDWC"
             a, b = bin_16_8_split(reg_c)
             write_ram(ram_bank, ram_ptr, a)
-            write_ram(ram_bank, bin_16_sum(ram_ptr + 1), b)
+            c, _ = bin_16_sum(ram_ptr, 1)
+            write_ram(ram_bank, c, b)
             cpu_next_instr_ptr()
         elif curr_instr_val == 9:
             #wra
@@ -170,17 +185,20 @@ def clk():
         elif curr_instr_val == 12:
             #wrwa
             last_instr = "WRWA"
-            reg_a = bin_8_16_comp(read_ram(ram_bank, ram_ptr), bin_16_sum(ram_ptr + 1))
+            c, _ = bin_16_sum(ram_ptr, 1)
+            reg_a =  bin_8_16_comp(read_ram(ram_bank, ram_ptr), read_ram(ram_bank, c))
             cpu_next_instr_ptr()
         elif curr_instr_val == 13:
             #wrwb
             last_instr = "WRWB"
-            reg_b = bin_8_16_comp(read_ram(ram_bank, ram_ptr), bin_16_sum(ram_ptr + 1))
+            c, _ = bin_16_sum(ram_ptr, 1)
+            reg_b = bin_8_16_comp(read_ram(ram_bank, ram_ptr), read_ram(ram_bank, c))
             cpu_next_instr_ptr()
         elif curr_instr_val == 14:
             #wrwc
             last_instr = "WRWC"
-            reg_c = bin_8_16_comp(read_ram(ram_bank, ram_ptr), bin_16_sum(ram_ptr + 1))
+            c, _ = bin_16_sum(ram_ptr, 1)
+            reg_c =  bin_8_16_comp(read_ram(ram_bank, ram_ptr), read_ram(ram_bank, c))
             cpu_next_instr_ptr()
         elif curr_instr_val == 15:
             #swab
@@ -656,6 +674,30 @@ def set_exp():
     global cpu_exp
     cpu_exp = dpg.get_value("exp_input")
 
+# ASCII MONITOR
+def ascii_monitor_change_bank(sender):
+    global ascii_monitor_bank
+    ascii_monitor_bank = int(dpg.get_value(sender).split(" ")[1])
+
+def ascii_monitor_change_x(sender):
+    global ascii_monitor_x
+    ascii_monitor_x = dpg.get_value(sender)
+
+def ascii_monitor_change_y(sender):
+    global ascii_monitor_y
+    ascii_monitor_y = dpg.get_value(sender)
+
+def ascii_monitor_update():
+    s = ""
+    for y in range(ascii_monitor_y):
+        for x in range(ascii_monitor_x):
+            val = read_ram(ascii_monitor_bank, y * ascii_monitor_x + x)
+            s += get_charmap(val)
+        s += "\n"
+    print(s)
+    dpg.set_value("ascii_monitor_text", s)
+        
+
 # CPU CON
 with dpg.window(label="Управление процессором", no_close=True):
     dpg.add_text("Работа:")
@@ -762,12 +804,13 @@ with dpg.window(label="Дамп ОЗУ", no_close=True):
         dpg.add_button(label="Загрузить [текст]", callback=ram_dump_load_def)
         dpg.add_button(label="Сохранить [текст]", callback=ram_dump_save_def)
 
-"""with dpg.window(label="Экран", no_close=True):
+with dpg.window(label="ASCII экран", no_close=True):
     with dpg.group(horizontal=True):
-        dpg.add_combo(items=[ f"Банка {i}" for i in range(0, BANKS) ], label="Банка ОЗУ", width=150, default_value="Банка 0", callback=ram_editor_change_bank)
+        dpg.add_combo(items=[ f"Банка {i}" for i in range(0, BANKS) ], label="Банка ОЗУ", width=150, default_value="Банка 0", callback=ascii_monitor_change_bank)
     with dpg.group(horizontal=True):
-        dpg.add_slider_int(label="X", min_value=0, max_value=1, default_value=1, width=100, callback=ram_editor_change_x)
-        dpg.add_slider_int(label="Y", min_value=0, max_value=1, default_value=1, width=100, callback=ram_editor_change_y)"""
+        dpg.add_input_int(label="X", min_value=20, max_value=200, default_value=20, min_clamped=True, max_clamped=True, width=100, callback=ascii_monitor_change_x)
+        dpg.add_input_int(label="Y", min_value=20, max_value=200, default_value=20, min_clamped=True, max_clamped=True,  width=100, callback=ascii_monitor_change_y)
+    dpg.add_text("", tag="ascii_monitor_text")
 
 # SHOW STUFF
 dpg.show_viewport()
@@ -805,6 +848,9 @@ dec: {cpu_exp}
     # RAM EDITOR UPDATE
     ram_editor_set_data()
     ram_editor_update_info()
+
+    # ASCII MONITOR UPDATE
+    ascii_monitor_update()
 
     # RENDER WINDOWS
     dpg.render_dearpygui_frame()

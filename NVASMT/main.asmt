@@ -1,0 +1,20 @@
+# КАСТОМНЫЙ ЯП!!!
+
+str string Hello, Egor!
+int i 0
+int offset 0
+int char 0
+
+&p
+# СЧИТАЕМ ГДЕ НАШ СИМВОЛ
+$offset = &string
+$char = 0
+$offset = $offset + $i
+$offset = $offset + 2
+read_from_addr_8: 0, $offset, $char
+write_to_addr_8: 1, $i, $char
+
+$i = $i + 1
+JMPL: $i, $string, &p
+
+HLT

@@ -140,18 +140,22 @@ for i in nc_data:
         
         val = " ".join(val)
         if val[0] == '"' and val[-1] == '"':
-            val = val[1:-2]
-            temp = [len(val)]
-            for j in val:
-                c = [get_charmap(j)]
-                temp += c
-                size += len(c)
-            data_bytes += temp
+            val = val[1:-1]
+            val1 = list(bin_16_8_split(len(val)))
+            data_bytes += val1
+            for i in val:
+                if i in charmap.charmap.keys():
+                    data_bytes.append(charmap.charmap[i])
+                else:
+                    data_bytes.append(0)
+            allsize = len(val) + 2
+            size += allsize
+            ptrs[name] = size - allsize
         else:
             val = bin_16_8_split(int(val))
             size += 2
             data_bytes += val
-        ptrs[name] = size - 2
+            ptrs[name] = size - 2
     except Exception as e:
         print(f"error on data line: {i} {e}")
         quit()
